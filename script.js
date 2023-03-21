@@ -31,7 +31,12 @@ const renderCountry = function (data, className = '') {
   `;
 
   countriesContainer.insertAdjacentHTML('beforeend', html);
-  countriesContainer.style.opacity = 1;
+  // countriesContainer.style.opacity = 1;
+};
+
+const renderError = function (msg) {
+  countriesContainer.insertAdjacentText('beforeend', msg);
+  // countriesContainer.style.opacity = 1;
 };
 
 // const getCountryData = function (country) {
@@ -48,10 +53,7 @@ const renderCountry = function (data, className = '') {
 
 const getCountryData = function (country) {
   fetch(`https://restcountries.com/v3.1/name/${country}`)
-    .then(
-      res => res.json(),
-      err => alert(err)
-    )
+    .then(res => res.json())
     .then(data => {
       console.log(data[0]);
       renderCountry(data[0]);
@@ -62,10 +64,17 @@ const getCountryData = function (country) {
       return fetch(`https://restcountries.com/v3.1/alpha/${neighbour}`);
     })
     .then(res => res.json())
-    .then(data => renderCountry(data[0], 'neighbour'));
+    .then(data => renderCountry(data[0], 'neighbour'))
+    .catch(err => {
+      console.error(err.message);
+      renderError(`Something went wrong: ${err.message}`);
+    })
+    .finally(() => (countriesContainer.style.opacity = 1));
 };
 
-getCountryData('Bharat');
+btn.addEventListener('click', function () {
+  getCountryData('Bharat');
+});
 
 /* 
   const renderCountry = function (data, className = '') {
