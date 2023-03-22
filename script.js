@@ -6,6 +6,101 @@ const imgContainer = document.querySelector('.images');
 
 ///////////////////////////////////////
 
+const renderCountry = function (data, className = '') {
+  const html = `
+  <article class="country ${className}">
+  <img class="country__img" src="${data.flags.svg}" />
+  <div class="country__data">
+    <h3 class="country__name">${data.name.official}</h3>
+    <h4 class="country__region">${data.region}</h4>
+    <p class="country__row"><span>👫</span>${(
+      +data.population / 1000000
+    ).toFixed(1)}</p>
+    <p class="country__row"><span>🗣️</span>${
+      data.languages[Object.keys(data.languages)[0]]
+    }</p>
+    <p class="country__row"><span>💰</span>${
+      data.currencies[Object.keys(data.currencies)[0]].name
+    }</p>
+  </div>
+</article>
+  `;
+
+  countriesContainer.insertAdjacentHTML('beforeend', html);
+  countriesContainer.style.opacity = 1;
+};
+
+const renderError = function (msg) {
+  countriesContainer.insertAdjacentText('beforeend', msg);
+  countriesContainer.style.opacity = 1;
+};
+
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {
+    navigator.geolocation.getCurrentPosition(resolve, reject); // resolve will pass the position automatically
+  });
+};
+
+// ASYNC AND AWAIT
+const whereAmI = async function () {
+  try {
+    // Getting co-ordinates:
+    const position = await getPosition();
+    const { latitude: lat, longitude: long } = position.coords;
+
+    // Getting location:
+    const res = await fetch(
+      `https://geocode.xyz/${lat},${long}?geoit=json&auth=1339718243064921253x96876`
+    );
+    if (!res.ok) {
+      throw new Error('Promlem getting location data');
+    }
+
+    const data = await res.json();
+    const country = data.country;
+
+    // Getting details of country:
+    const detailsCountry = await fetch(
+      `https://restcountries.com/v3.1/name/${country}`
+    );
+
+    if (!detailsCountry.ok) {
+      throw new Error(`Can't find the country`);
+    }
+    const details = await detailsCountry.json();
+    renderCountry(details[0]);
+  } catch (err) {
+    console.error(err);
+    renderError(`Something went wrong:🎈 ${err.message}`);
+  }
+};
+
+whereAmI();
+console.log('First');
+
+// .then(data => {
+//   console.log(data[0]);
+//   renderCountry(data[0]);
+//   const neighbour = data[0].borders?.[0];
+//   // const neighbour = 'asasasdasdd';
+
+//   // console.log(neighbour);
+//   if (!neighbour) throw new Error('No neighbour found!');
+
+//   // getting data of neighbor
+//   return getJSON(
+//     `https://restcountries.com/v3.1/alpha/${neighbour}`,
+//     'No neighbour found.'
+//   );
+// })
+// .then(data => renderCountry(data[0], 'neighbour'))
+// .catch(err => console.error(`Error observed: ${err.message}`))
+// .finally(() => {
+//   countriesContainer.style.opacity = 1;
+// });
+// };
+
+/*
 // CODING CHALLENGE - 2:
 const createImage = function (imgPath) {
   return new Promise(function (resolve, reject) {
