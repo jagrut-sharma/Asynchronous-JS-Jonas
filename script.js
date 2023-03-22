@@ -2,9 +2,239 @@
 
 const btn = document.querySelector('.btn-country');
 const countriesContainer = document.querySelector('.countries');
+const imgContainer = document.querySelector('.images');
 
 ///////////////////////////////////////
 
+// CODING CHALLENGE - 2:
+const createImage = function (imgPath) {
+  return new Promise(function (resolve, reject) {
+    const imgEle = document.createElement('img');
+    imgEle.src = imgPath;
+
+    imgEle.addEventListener('load', function () {
+      imgContainer.append(imgEle);
+      resolve(imgEle);
+    });
+
+    imgEle.addEventListener('error', function () {
+      reject(new Error('Error in loading image. Image not found'));
+    });
+  });
+};
+
+let currImg;
+
+createImage(`./img/img-1.jpg`)
+  .then(img => {
+    currImg = img;
+    console.log('Image 1 loaded and displayed');
+    return wait(2);
+  })
+  .then(() => {
+    currImg.style.display = 'none';
+    return createImage('./img/img-2.jpg');
+  })
+  .then(img => {
+    currImg = img;
+    console.log('Image 2 Loaded and displayed');
+    return wait(2);
+  })
+  .then(() => {
+    currImg.style.display = 'none';
+    return createImage('./img/img-3.jpg');
+  })
+  .then(img => {
+    console.log('Image 3 Loaded and Displayed');
+  })
+  .catch(err => console.error(err.message));
+
+// Creating wait function
+const wait = function (timer) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, timer * 1000);
+  });
+};
+/*
+// Promisifying the geolocation API:
+
+// navigator.geolocation.getCurrentPosition(
+//   pos => console.log(pos), // GeolocationPosition {coords: GeolocationCoordinates, timestamp: 1679480413660}
+//   err => console.error(err)
+// );
+
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {
+    // navigator.geolocation.getCurrentPosition(
+    //   pos => resolve(pos),
+    //   err => reject(err)
+    // );
+
+    // Can be written in shortcut as follows:
+    navigator.geolocation.getCurrentPosition(resolve, reject); // resolve will pass the position automatically
+  });
+};
+
+console.log('Getting position');
+
+const renderCountry = function (data, className = '') {
+  const html = `
+  <article class="country ${className}">
+  <img class="country__img" src="${data.flags.svg}" />
+  <div class="country__data">
+    <h3 class="country__name">${data.name.official}</h3>
+    <h4 class="country__region">${data.region}</h4>
+    <p class="country__row"><span>👫</span>${(
+      +data.population / 1000000
+    ).toFixed(1)}</p>
+    <p class="country__row"><span>🗣️</span>${
+      data.languages[Object.keys(data.languages)[0]]
+    }</p>
+    <p class="country__row"><span>💰</span>${
+      data.currencies[Object.keys(data.currencies)[0]].name
+    }</p>
+  </div>
+</article>
+  `;
+
+  countriesContainer.insertAdjacentHTML('beforeend', html);
+  // countriesContainer.style.opacity = 1;
+};
+
+const renderError = function (msg) {
+  countriesContainer.insertAdjacentText('beforeend', msg);
+  // countriesContainer.style.opacity = 1;
+};
+
+const getJSON = function (url, errorMsg) {
+  return fetch(url).then(res => {
+    console.log(res);
+    if (!res.ok) {
+      throw new Error(`${errorMsg} Error: ${res.status}`);
+    }
+    return res.json();
+  });
+};
+
+const whereAmI = function () {
+  getPosition()
+    .then(pos => {
+      const { latitude: lat, longitude: long } = pos.coords;
+      return fetch(
+        `https://geocode.xyz/${lat},${long}?geoit=json&auth=1339718243064921253x96876`
+      );
+    })
+    .then(response => {
+      console.log(response);
+      if (!response.ok) {
+        throw new Error(`Problem with geocoding ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      // console.log(data);
+      console.log(`You are in ${data.city}, ${data.country}`);
+
+      // getting data
+      const country = data.country;
+      return getJSON(
+        `https://restcountries.com/v3.1/name/${country}`,
+        'Country not found.'
+      );
+    })
+    .then(data => {
+      console.log(data[0]);
+      renderCountry(data[0]);
+      const neighbour = data[0].borders?.[0];
+      // const neighbour = 'asasasdasdd';
+
+      // console.log(neighbour);
+      if (!neighbour) throw new Error('No neighbour found!');
+
+      // getting data of neighbor
+      return getJSON(
+        `https://restcountries.com/v3.1/alpha/${neighbour}`,
+        'No neighbour found.'
+      );
+    })
+    .then(data => renderCountry(data[0], 'neighbour'))
+    .catch(err => console.error(`Error observed: ${err.message}`))
+    .finally(() => {
+      countriesContainer.style.opacity = 1;
+    });
+};
+
+getPosition().then(pos => console.log(pos)); // GeolocationPosition {coords: GeolocationCoordinates, timestamp: 1679480637228}
+
+btn.addEventListener('click', whereAmI);
+
+/*
+// Building a Promise:
+
+const lottery = new Promise(function (resolve, reject) {
+  console.log('Lottery is being drawn.... 🎡');
+  setTimeout(function () {
+    if (Math.random() >= 0.5) {
+      resolve('Congrats, you won the lottery!! ✨');
+    } else {
+      reject(new Error('Sorry, You lost 😥'));
+    }
+  }, 2000);
+});
+
+lottery.then(res => console.log(res)).catch(err => console.error(err));
+
+// Promisifying setTimeout:
+const wait = function (seconds) {
+  return new Promise(function (resolve) {
+    // Here we didn't use reject as parameter => setTimeout will definitely return a result and not fail.
+    setTimeout(resolve, seconds * 1000); // No resolve message is passed => Not mandatory to pass a value inside resolve.
+  });
+};
+
+wait(2)
+  .then(() => {
+    // No parameter is received it is empty () as only resolve was passed and no message/data was passed.
+    console.log('Waited for 2 seconds');
+    return wait(1);
+  })
+  .then(() => console.log('Waited for 1 second'));
+
+// Similary for avoiding pyramid of doom:
+// setTimeout(() => {
+//   console.log('1 second passed');
+//   setTimeout(() => {
+//     console.log('2 second passed');
+//     setTimeout(() => {
+//       console.log('3 seconds passed');
+//       setTimeout(() => console.log('4 seconds passed'), 1000);
+//     }, 1000);
+//   }, 1000);
+// }, 1000);
+
+// This can be promisified as follows:
+
+wait(1)
+  .then(() => {
+    console.log('1 second has passed');
+    return wait(1);
+  })
+  .then(() => {
+    console.log('2 seconds has passed');
+    return wait(1);
+  })
+  .then(() => {
+    console.log('3 seconds have passed');
+    return wait(1);
+  })
+  .then(() => console.log('4 seconds have passed'));
+
+// Directky resolving and rejecting Promise:
+
+Promise.resolve('ABC').then(x => console.log(x));
+Promise.reject('DEF').catch(x => console.error(x));
+
+/*
 // CODING CHALLENGE - 1:
 
 // In this challenge you will build a function 'whereAmI' which renders a country
