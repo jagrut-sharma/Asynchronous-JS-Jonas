@@ -5,7 +5,75 @@ const countriesContainer = document.querySelector('.countries');
 const imgContainer = document.querySelector('.images');
 
 ///////////////////////////////////////
+// CODING CHALLENGE - 3:
 
+const createImage = function (imgPath) {
+  return new Promise(function (resolve, reject) {
+    const imgEle = document.createElement('img');
+    imgEle.src = imgPath;
+
+    imgEle.addEventListener('load', function () {
+      imgContainer.append(imgEle);
+      resolve(imgEle);
+    });
+
+    imgEle.addEventListener('error', function () {
+      reject(new Error('Error in loading image. Image not found'));
+    });
+  });
+};
+
+const wait = function (timer) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, timer * 1000);
+  });
+};
+
+let currImg;
+
+const loadNPause = async function () {
+  try {
+    // First Image:
+    currImg = await createImage(`./img/img-1.jpg`);
+    console.log('Image 1 loaded and displayed.');
+    await wait(2);
+    currImg.style.display = 'none';
+
+    // Second Image:
+    currImg = await createImage('./img/img-2.jpg');
+    console.log('Image 2 loaded and displayed.');
+    await wait(2);
+    currImg.style.display = 'none';
+
+    // Third Image:
+    currImg = await createImage('./img/img-3.jpg');
+    console.log('Image 3 loaded and displayed');
+    await wait(2);
+  } catch (err) {
+    console.error(`Error encountered: ${err.message}`);
+  }
+};
+
+// loadNPause();
+
+const loadAll = async function (imgArr) {
+  try {
+    const imgs = imgArr.map(async path => await createImage(path)); // Here callback function inside map is an async function => so as async function returns a promise => its returning 3 times for 3 elements => So imgs will contain 3 promises.
+    console.log(imgs);
+
+    const imgEle = await Promise.all(imgs);
+    console.log(imgEle);
+
+    // Adding class
+    imgEle.forEach(img => img.classList.add('parallel'));
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+loadAll(['./img/img-1.jpg', './img/img-2.jpg', './img/img-3.jpg']);
+
+/*
 const getJSON = function (url, errorMsg) {
   return fetch(url).then(res => {
     // console.log(res);
