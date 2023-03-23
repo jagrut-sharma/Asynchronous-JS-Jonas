@@ -6,6 +6,89 @@ const imgContainer = document.querySelector('.images');
 
 ///////////////////////////////////////
 
+const getJSON = function (url, errorMsg) {
+  return fetch(url).then(res => {
+    // console.log(res);
+    if (!res.ok) {
+      throw new Error(`${errorMsg} Error: ${res.status}`);
+    }
+    return res.json();
+  });
+};
+
+(async function () {
+  const res = await Promise.race([
+    getJSON(`https://restcountries.com/v3.1/name/bharat`),
+    getJSON(`https://restcountries.com/v3.1/name/Italy`),
+    getJSON(`https://restcountries.com/v3.1/name/mexico`),
+  ]);
+  console.log(res[0]);
+})();
+
+const timeout = function (sec) {
+  return new Promise(function (_, reject) {
+    setTimeout(function () {
+      reject(new Error('Request took too long'));
+    }, sec * 1000);
+  });
+};
+
+Promise.race([
+  getJSON(`https://restcountries.com/v3.1/name/bharat`),
+  timeout(2),
+])
+  .then(res => console.log(res[0])) // {name: {…}, tld: Array(1), cca2: 'IN', ccn3: '356', cca3: 'IND', …}
+  .catch(err => console.error(err));
+
+// Promise.allSettled:
+Promise.allSettled([
+  Promise.resolve('Success'),
+  Promise.reject('ERROR'),
+  Promise.resolve('Again success'),
+]).then(res => console.log(res)); // [{…}, {…}, {…}]
+
+// Promise.allS:
+Promise.all([
+  Promise.resolve('Success'),
+  Promise.reject('ERROR'),
+  Promise.resolve('Again success'),
+])
+  .then(res => console.log(res))
+  .catch(err => console.error(err)); // ERROR
+
+// Promise.any:
+Promise.any([
+  Promise.resolve('Success 123'),
+  Promise.reject('ERROR'),
+  Promise.resolve('Again success'),
+]).then(res => console.log(res)); // Success 123
+
+/*
+const get3Countries = async function (c1, c2, c3) {
+  try {
+    // const [data1] = await getJSON(`https://restcountries.com/v3.1/name/${c1}`);
+    // const [data2] = await getJSON(`https://restcountries.com/v3.1/name/${c2}`);
+    // const [data3] = await getJSON(`https://restcountries.com/v3.1/name/${c3}`);
+
+    // console.log([data1.capital, data2.capital, data3.capital]);
+
+    // Using Promise.all:
+    const data = await Promise.all([
+      getJSON(`https://restcountries.com/v3.1/name/${c1}`),
+      getJSON(`https://restcountries.com/v3.1/name/${c2}`),
+      getJSON(`https://restcountries.com/v3.1/name/${c3}`),
+    ]);
+
+    console.log(data);
+    console.log(data.map(([d]) => d.capital[0]));
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+get3Countries('tanzania', 'bharat', 'australia');
+
+/*
 const renderCountry = function (data, className = '') {
   const html = `
   <article class="country ${className}">
