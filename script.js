@@ -27,12 +27,12 @@ const renderCountry = function (data, className = '') {
   `;
 
   countriesContainer.insertAdjacentHTML('beforeend', html);
-  countriesContainer.style.opacity = 1;
+  // countriesContainer.style.opacity = 1;
 };
 
 const renderError = function (msg) {
   countriesContainer.insertAdjacentText('beforeend', msg);
-  countriesContainer.style.opacity = 1;
+  // countriesContainer.style.opacity = 1;
 };
 
 const getPosition = function () {
@@ -68,15 +68,36 @@ const whereAmI = async function () {
       throw new Error(`Can't find the country`);
     }
     const details = await detailsCountry.json();
-    renderCountry(details[0]);
+    countriesContainer.style.opacity = 1;
+    renderCountry(details[1]);
+
+    return `You are in ${data.city}, ${data.country}`;
   } catch (err) {
     console.error(err);
     renderError(`Something went wrong:🎈 ${err.message}`);
+
+    // Reject promise returned from async function
+    throw err;
   }
 };
 
-whereAmI();
-console.log('First');
+(async function () {
+  try {
+    console.log('1. Will get location');
+    // const city = whereAmI();
+    // console.log(city); // consoles a pending promise => its fulfilled value becomes one reyurned by an async function. => which in this case is `You are in ${data.city}, ${data.country}`
+    const city = await whereAmI();
+    console.log(city);
+    console.log('3. Finished getting location');
+  } catch (err) {
+    console.error(`Error in async function: ${err}`);
+  }
+})();
+
+// Outputs:
+// 1. Will get location
+// 3. Finished getting location
+// {name: {…}, tld: Array(1), cca2: 'IN', ccn3: '356', cca3: 'IND', …}
 
 // .then(data => {
 //   console.log(data[0]);
